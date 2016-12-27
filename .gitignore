@@ -1,0 +1,31 @@
+# Executables
+*.exe
+*.dll
+*.pdb
+*.mdb
+*.bin
+
+# Packages
+*.nupkg
+
+# Build directories
+bin
+obj
+Debug
+Release
+packages
+build
+
+# IDE-specific directories
+.idea
+*.userprefs
+
+# Nuget
+*.lock.json
+*.nuget.props
+*.nuget.targets
+
+# backup files
+*.save
+*.bak
+*.backup
