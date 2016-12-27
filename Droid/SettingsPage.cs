@@ -27,6 +27,13 @@ namespace ClickTest
 			};
 			entryY.TextChanged += (sender, e) => ClickSettings.Instance.ClickY = e.NewTextValue.ToInteger();
 
+			var editorLog = new Editor
+			{
+				HorizontalOptions = LayoutOptions.FillAndExpand,
+				VerticalOptions = LayoutOptions.FillAndExpand,
+				Text = ClickSettings.Log,
+			};
+
 			Content = new StackLayout
 			{
 				VerticalOptions = LayoutOptions.Center,
@@ -34,9 +41,6 @@ namespace ClickTest
 					new Xamarin.Forms.Button {
 						Text = "Open Overlay",
 						Command = new Command((obj) => showOverlay()),
-					},
-					new Label {
-						VerticalOptions = LayoutOptions.FillAndExpand,
 					},
 					new StackLayout {
 						Orientation = StackOrientation.Horizontal,
@@ -60,9 +64,7 @@ namespace ClickTest
 							entryY,
 						},
 					},
-					new Label {
-						VerticalOptions = LayoutOptions.FillAndExpand,
-					},
+					editorLog,
 				},
 			};
 		}

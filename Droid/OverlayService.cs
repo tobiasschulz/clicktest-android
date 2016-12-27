@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -86,6 +87,7 @@ namespace ClickTest.Droid
 				Log.Debug(nameof(OverlayService), $"Loop");
 
 				int g = generation;
+				ClickMeasure();
 				while (g == generation)
 				{
 					Click();
@@ -96,6 +98,39 @@ namespace ClickTest.Droid
 			catch (Exception ex)
 			{
 				Log.Debug(nameof(OverlayService), $"{ex}");
+			}
+		}
+
+		public long delayMilliseconds = 0;
+
+		public void ClickMeasure()
+		{
+			Log.Debug(nameof(OverlayService), $"ClickMeasure");
+
+			var x = ClickSettings.Instance.ClickX;
+			var y = ClickSettings.Instance.ClickY;
+
+			var process = Java.Lang.Runtime.GetRuntime().Exec("su");
+			using (var stream = process.OutputStream)
+			{
+				using (var sw = new StreamWriter(stream))
+				{
+					for (int i = 0; i < 10; i++)
+					{
+						sw.Write($"/system/bin/input tap {x} {y}\n");
+						sw.Write($"sleep 0.005\n");
+					}
+					sw.Write($"exit\n");
+					sw.Flush();
+
+					var stopwatch = new Stopwatch();
+					stopwatch.Start();
+					process.WaitFor();
+					stopwatch.Stop();
+					delayMilliseconds = stopwatch.ElapsedMilliseconds / 10;
+					Log.Debug(nameof(OverlayService), $"ClickMeasure: stopwatch.ElapsedMilliseconds = {stopwatch.ElapsedMilliseconds} (for 10 input commands), delayMilliseconds => {delayMilliseconds}");
+					ClickSettings.Log += $"ClickMeasure: stopwatch.ElapsedMilliseconds = {stopwatch.ElapsedMilliseconds} (for 10 input commands), delayMilliseconds => {delayMilliseconds}\n";
+				}
 			}
 		}
 
@@ -111,10 +146,15 @@ namespace ClickTest.Droid
 			{
 				using (var sw = new StreamWriter(stream))
 				{
-					for (int i = 0; i < 100; i++)
+					for (int i = 0; i < 10; i++)
 					{
-						sw.Write($"/system/bin/input tap {x} {y}\n");
-						sw.Write($"sleep 0.005\n");
+						for (int k = 0; k < 10; k++)
+						{
+							sw.Write($"/system/bin/input tap {x} {y} &\n");
+						}
+						//sw.Write($"/system/bin/input tap {x} {y}\n");
+						sw.Write($"sleep " + ((decimal)(delayMilliseconds) / (decimal)1000.0).ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
+						//sw.Write($"sleep 0.005\n");
 					}
 					sw.Write($"exit\n");
 					sw.Flush();

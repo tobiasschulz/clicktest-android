@@ -24,6 +24,17 @@ namespace ClickTest.Droid
 			TabLayoutResource = Resource.Layout.Tabbar;
 			ToolbarResource = Resource.Layout.Toolbar;
 
+
+			var process = Java.Lang.Runtime.GetRuntime().Exec("su");
+			using (var stream = process.OutputStream)
+			{
+				using (var sw = new System.IO.StreamWriter(stream))
+				{
+					sw.Write($"exit\n");
+					sw.Flush();
+				}
+			}
+
 			global::Xamarin.Forms.Forms.Init(this, bundle);
 			LoadApplication(new App());
 		}
