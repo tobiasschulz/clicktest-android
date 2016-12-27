@@ -146,17 +146,20 @@ namespace ClickTest.Droid
 			{
 				using (var sw = new StreamWriter(stream))
 				{
+					var script = "";
 					for (int i = 0; i < 10; i++)
 					{
 						for (int k = 0; k < 10; k++)
 						{
-							sw.Write($"/system/bin/input tap {x} {y} &\n");
+							script += ($"/system/bin/input tap {x} {y} &\n");
 						}
 						//sw.Write($"/system/bin/input tap {x} {y}\n");
-						sw.Write($"sleep " + ((decimal)(delayMilliseconds) / (decimal)1000.0).ToString("0.000", System.Globalization.CultureInfo.InvariantCulture));
+						script += ($"usleep {delayMilliseconds * 1000}");
 						//sw.Write($"sleep 0.005\n");
 					}
-					sw.Write($"exit\n");
+					script += ($"exit\n");
+					Log.Debug(nameof(OverlayService), $"Click:\n{script}\n\n");
+					sw.Write(script);
 					sw.Flush();
 					process.WaitFor();
 				}
