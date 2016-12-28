@@ -11,6 +11,7 @@ using ClickTest.Droid;
 using Android.Provider;
 
 [assembly: UsesPermission(Name = "android.permission.SYSTEM_ALERT_WINDOW")]
+[assembly: UsesPermission(Name = "android.permission.INJECT_EVENTS")]
 
 namespace ClickTest
 {

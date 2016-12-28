@@ -116,12 +116,14 @@ namespace ClickTest.Droid
 				Log.Debug(nameof(OverlayService), $"Loop");
 
 				int g = generation;
-				ClickMeasure();
+				//ClickMeasure();
 				while (g == generation)
 				{
-					Click();
+					//Click();
+					//await Click2();
+					Click3();
 
-					await Task.Delay(10);
+					await Task.Delay(200);
 				}
 			}
 			catch (Exception ex)
@@ -129,6 +131,85 @@ namespace ClickTest.Droid
 				Log.Debug(nameof(OverlayService), $"{ex}");
 				ClickSettings.Log += DateTime.Now.FormatGerman() + "\n" + $"exception:\n{ex}\n\n";
 			}
+		}
+
+		public void Click3()
+		{
+			Log.Debug(nameof(OverlayService), $"Click3");
+
+			var x = ClickSettings.Instance.ClickX;
+			var y = ClickSettings.Instance.ClickY;
+
+			var process = Java.Lang.Runtime.GetRuntime().Exec("su");
+			using (var stream = process.OutputStream)
+			{
+				using (var sw = new StreamWriter(stream))
+				{
+					var script = "";
+					for (int i = 0; i < 20; i++)
+					{
+						script += $@"sendevent /dev/input/event10 1 330 1
+sendevent /dev/input/event10 3 48 34
+sendevent /dev/input/event10 3 57 0
+sendevent /dev/input/event10 3 53 {x}
+sendevent /dev/input/event10 3 54 {y}
+sendevent /dev/input/event10 0 2 0
+sendevent /dev/input/event10 0 0 0
+sendevent /dev/input/event10 1 330 0
+sendevent /dev/input/event10 0 2 0
+sendevent /dev/input/event10 0 0 0
+";
+
+						script += $"usleep 10000\n";
+					}
+					script += ($"exit\n");
+					Log.Debug(nameof(OverlayService), $"Click3:\n{script}\n\n");
+					sw.Write(script);
+					sw.Flush();
+					process.WaitFor();
+				}
+			}
+		}
+
+		Instrumentation inst;
+
+		public async Task Click2()
+		{
+			if (inst == null) inst = new Instrumentation();
+
+			var x = ClickSettings.Instance.ClickX;
+			var y = ClickSettings.Instance.ClickY;
+
+			var eDown = MotionEvent.Obtain(SystemClock.UptimeMillis(), SystemClock.UptimeMillis(), MotionEventActions.Down, x, y, 0);
+			var eUp = MotionEvent.Obtain(SystemClock.UptimeMillis(), SystemClock.UptimeMillis(), MotionEventActions.Up, x, y, 0);
+
+			eDown.SetSource(InputSourceType.Touchscreen);
+			eUp.SetSource(InputSourceType.Touchscreen);
+
+			Java.Lang.Class[] paramTypes = new Java.Lang.Class[2];
+			paramTypes[0] = Java.Lang.Class.FromType(typeof(InputEvent));
+			paramTypes[1] = Java.Lang.Integer.Type;
+			var inputManager = GetSystemService(Context.InputService).JavaCast<Android.Hardware.Input.InputManager>();
+			var hiddenMethod = inputManager.Class.GetMethod("injectInputEvent", paramTypes);
+
+			Java.Lang.Object[] p = new Java.Lang.Object[2];
+			p[0] = eDown;
+			p[1] = 0;
+
+			hiddenMethod.Invoke(inputManager, p);
+
+			await Task.Delay(5);
+
+			p[0] = eUp;
+
+			hiddenMethod.Invoke(inputManager, p);
+
+
+			//inst.SendPointerSync(eDown);
+			//await Task.Delay(5);
+			//inst.SendPointerSync(MotionEvent.Obtain(SystemClock.UptimeMillis(), SystemClock.UptimeMillis(), MotionEventActions.Up, x, y, 0));
+
+			ClickSettings.Log += DateTime.Now.FormatGerman() + "\n" + $"SendPointerSync\n";
 		}
 
 		public long delayMilliseconds = 0;
