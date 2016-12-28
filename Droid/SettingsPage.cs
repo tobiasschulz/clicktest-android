@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Widget;
@@ -9,9 +10,10 @@ namespace ClickTest
 {
 	public class SettingsPage : ContentPage
 	{
+		Editor editorLog;
 		public SettingsPage()
 		{
-			Title = "ClickTest";
+			Title = "ClickTest " + ClickSettings.Instance.Version;
 
 			var entryX = new Entry
 			{
@@ -27,12 +29,14 @@ namespace ClickTest
 			};
 			entryY.TextChanged += (sender, e) => ClickSettings.Instance.ClickY = e.NewTextValue.ToInteger();
 
-			var editorLog = new Editor
+			editorLog = new Editor
 			{
 				HorizontalOptions = LayoutOptions.FillAndExpand,
 				VerticalOptions = LayoutOptions.FillAndExpand,
 				Text = ClickSettings.Log,
+				HeightRequest = 500,
 			};
+			Task.Run(async () => await refreshLog()).Forget();
 
 			Content = new StackLayout
 			{
@@ -64,6 +68,22 @@ namespace ClickTest
 							entryY,
 						},
 					},
+					new Xamarin.Forms.Button {
+						Text = "Copy",
+						Command = new Command(()=>{
+							try {
+								Intent sendIntent = new Intent();
+								sendIntent.SetAction(Intent.ActionSend);
+								sendIntent.PutExtra(Intent.ExtraText, ClickSettings.Log);
+								sendIntent.AddFlags(ActivityFlags.NewTask);
+								sendIntent.SetType("text/plain");
+								SettingsActivity.Instance.StartActivity(sendIntent);
+
+							} catch (Exception ex) {
+								ClickSettings.Log += $"\n{ex}\n";
+							}
+						}),
+					},
 					editorLog,
 				},
 			};
@@ -72,6 +92,19 @@ namespace ClickTest
 		private void showOverlay()
 		{
 			MainActivity.Instance.StartService(new Intent(MainActivity.Instance, typeof(OverlayService)));
+		}
+
+		private async Task refreshLog()
+		{
+			while (true)
+			{
+				Device.BeginInvokeOnMainThread(() =>
+				{
+					editorLog.Text = ClickSettings.Log;
+				});
+
+				await Task.Delay(10 * 1000);
+			}
 		}
 	}
 }

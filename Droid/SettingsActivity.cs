@@ -17,26 +17,32 @@ namespace ClickTest.Droid
 	[Activity(Label = "SettingsActivity", Icon = "@drawable/icon", Theme = "@style/MyTheme", ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class SettingsActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
 	{
+		public static SettingsActivity Instance = null;
 		protected override void OnCreate(Bundle bundle)
 		{
+			Instance = this;
 			base.OnCreate(bundle);
 
 			TabLayoutResource = Resource.Layout.Tabbar;
 			ToolbarResource = Resource.Layout.Toolbar;
 
-
-			var process = Java.Lang.Runtime.GetRuntime().Exec("su");
-			using (var stream = process.OutputStream)
+			try
 			{
-				using (var sw = new System.IO.StreamWriter(stream))
+				var process = Java.Lang.Runtime.GetRuntime().Exec("su");
+				using (var stream = process.OutputStream)
 				{
-					sw.Write($"exit\n");
-					sw.Flush();
+					using (var sw = new System.IO.StreamWriter(stream))
+					{
+						sw.Write($"exit\n");
+						sw.Flush();
+					}
 				}
 			}
+			catch (Exception) { }
 
 			global::Xamarin.Forms.Forms.Init(this, bundle);
 			LoadApplication(new App());
 		}
+
 	}
 }

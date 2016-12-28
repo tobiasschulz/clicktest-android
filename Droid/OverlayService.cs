@@ -43,6 +43,7 @@ namespace ClickTest.Droid
 			var windowManager = GetSystemService(Context.WindowService).JavaCast<IWindowManager>();
 
 			var layout = new LinearLayout(this);
+
 			var button = new Button(this);
 			button.Text = "Start";
 			button.Click += (sender, e) =>
@@ -58,6 +59,34 @@ namespace ClickTest.Droid
 				}
 			};
 			layout.AddView(button);
+
+			var textSpace = new TextView(this);
+			textSpace.Text = "      ";
+			layout.AddView(textSpace);
+
+			var buttonExit = new Button(this);
+			buttonExit.Text = "X";
+			buttonExit.SetBackgroundColor(Color.Red);
+			buttonExit.SetWidth(40);
+			buttonExit.Click += (sender, e) =>
+			{
+				generation++;
+				windowManager.RemoveView(layout);
+				StopSelf();
+			};
+			layout.AddView(buttonExit, new ViewGroup.LayoutParams(150, 150));
+
+			/*
+			var textSpace2 = new TextView(this);
+			textSpace2.Text = "      ";
+			layout.AddView(textSpace2);
+
+			var textVersion = new TextView(this);
+			textVersion.SetBackgroundColor(Color.DarkGray);
+			textVersion.Text = $"  {ClickSettings.Instance.Version}  ";
+			layout.AddView(textVersion);
+			*/
+
 
 			var _params = new WindowManagerLayoutParams(
 				ViewGroup.LayoutParams.WrapContent,
@@ -98,6 +127,7 @@ namespace ClickTest.Droid
 			catch (Exception ex)
 			{
 				Log.Debug(nameof(OverlayService), $"{ex}");
+				ClickSettings.Log += DateTime.Now.FormatGerman() + "\n" + $"exception:\n{ex}\n\n";
 			}
 		}
 
@@ -118,7 +148,6 @@ namespace ClickTest.Droid
 					for (int i = 0; i < 10; i++)
 					{
 						sw.Write($"/system/bin/input tap {x} {y}\n");
-						sw.Write($"sleep 0.005\n");
 					}
 					sw.Write($"exit\n");
 					sw.Flush();
@@ -129,7 +158,7 @@ namespace ClickTest.Droid
 					stopwatch.Stop();
 					delayMilliseconds = stopwatch.ElapsedMilliseconds / 10;
 					Log.Debug(nameof(OverlayService), $"ClickMeasure: stopwatch.ElapsedMilliseconds = {stopwatch.ElapsedMilliseconds} (for 10 input commands), delayMilliseconds => {delayMilliseconds}");
-					ClickSettings.Log += $"ClickMeasure: stopwatch.ElapsedMilliseconds = {stopwatch.ElapsedMilliseconds} (for 10 input commands), delayMilliseconds => {delayMilliseconds}\n";
+					ClickSettings.Log += DateTime.Now.FormatGerman() + "\n" + $"ClickMeasure: stopwatch.ElapsedMilliseconds = {stopwatch.ElapsedMilliseconds} (for 10 input commands), delayMilliseconds => {delayMilliseconds}\n";
 				}
 			}
 		}
@@ -147,18 +176,19 @@ namespace ClickTest.Droid
 				using (var sw = new StreamWriter(stream))
 				{
 					var script = "";
-					for (int i = 0; i < 10; i++)
+					for (int i = 0; i < 2; i++)
 					{
 						for (int k = 0; k < 10; k++)
 						{
 							script += ($"/system/bin/input tap {x} {y} &\n");
 						}
 						//sw.Write($"/system/bin/input tap {x} {y}\n");
-						script += ($"usleep {delayMilliseconds * 1000}");
+						script += ($"usleep {delayMilliseconds * 1000}\n");
 						//sw.Write($"sleep 0.005\n");
 					}
 					script += ($"exit\n");
 					Log.Debug(nameof(OverlayService), $"Click:\n{script}\n\n");
+					ClickSettings.Log += DateTime.Now.FormatGerman() + "\n" + $"Click:\n{script}\n\n";
 					sw.Write(script);
 					sw.Flush();
 					process.WaitFor();
